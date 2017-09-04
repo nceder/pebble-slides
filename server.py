@@ -8,12 +8,18 @@ from ws4py.websocket import WebSocket
 from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
+
 # return true if Mac
 def isMac():
     return sys.platform == 'darwin'
 
-# If we can't get the IP address by hostname (as observed on a Mac), then try by interface
-# Thanks to Gabriel Samfira (http://stackoverflow.com/questions/11735821/python-get-localhost-ip)
+
+# If we can't get the IP address by hostname (as observed on a Mac),
+# then try by interface
+# Thanks to Gabriel Samfira
+#    (http://stackoverflow.com/questions/11735821/python-get-localhost-ip)
+
+
 def get_lan_ips():
     ips = set()
     try:
@@ -23,12 +29,13 @@ def get_lan_ips():
 
     for i in netifaces.interfaces():
         iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
-        if iface != None:
+        if iface:
             for j in iface:
                 ips.add(j['addr'])
 
     valid_ips = sorted([ip for ip in ips if ip != '127.0.0.1'])
     return valid_ips
+
 
 # PyKeyboard does not work on Mac
 if isMac():
@@ -36,6 +43,7 @@ if isMac():
 else:
     from pykeyboard import PyKeyboard
     k = PyKeyboard()
+
 
 class PebbleWebSocket(WebSocket):
 
@@ -57,6 +65,7 @@ class PebbleWebSocket(WebSocket):
             elif message.data == 'up':
                 k.tap_key(k.left_key)
 
+
 # either take a port from arguments or serve on random port
 port = 0
 if len(sys.argv) == 2:
@@ -71,9 +80,11 @@ server = make_server('', port, server_class=WSGIServer,
 
 ips = get_lan_ips()
 if ips:
-    print('Pebble Slides started. Your address is:\n' + '\n'.join(ip + ':' + str(server.server_port) for ip in ips))
+    print('Pebble Slides started. Your address is:\n%s'
+          % '\n'.join(["%s:%s" % (ip, server.server_port) for ip in ips]))
 else:
-    print('Pebble Slides started on port ' + str(server.server_port) + ' (Please look up your IP address)')
+    print('Pebble Slides started on port  %s (Please look up your IP address)'
+          % server.server_port)
 
 server.initialize_websockets_manager()
 
