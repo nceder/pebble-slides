@@ -11,6 +11,12 @@ from ws4py.server.wsgiutils import WebSocketWSGIApplication
 # return true if Mac
 def isMac():
     return sys.platform == 'darwin'
+# PyKeyboard does not work on Mac
+if isMac():
+    import os
+else:
+    from pykeyboard import PyKeyboard
+    k = PyKeyboard()
 
 
 # If we can't get the IP address by hostname (as observed on a Mac),
@@ -30,14 +36,6 @@ def get_lan_ips():
 
     valid_ips = sorted([ip for ip in ips if ip != '127.0.0.1'])
     return valid_ips
-
-
-# PyKeyboard does not work on Mac
-if isMac():
-    import os
-else:
-    from pykeyboard import PyKeyboard
-    k = PyKeyboard()
 
 
 class PebbleWebSocket(WebSocket):
@@ -61,29 +59,33 @@ class PebbleWebSocket(WebSocket):
                 k.tap_key(k.left_key)
 
 
-# either take a port from arguments or serve on random port
-port = 0
-if len(sys.argv) == 2:
-    port = int(sys.argv[1])
-elif len(sys.argv) != 1:
-    print("usage: %s [port]" % sys.argv[0])
-    sys.exit()
+def main():
+    # either take a port from arguments or serve on random port
+    port = 0
+    if len(sys.argv) == 2:
+        port = int(sys.argv[1])
+    elif len(sys.argv) != 1:
+        print("usage: %s [port]" % sys.argv[0])
+        sys.exit()
 
-server = make_server('', port, server_class=WSGIServer,
+    server = make_server('', port, server_class=WSGIServer,
                      handler_class=WebSocketWSGIRequestHandler,
                      app=WebSocketWSGIApplication(handler_cls=PebbleWebSocket))
 
-ips = get_lan_ips()
-if ips:
-    print('Pebble Slides started. Your address is:\n%s'
-          % '\n'.join(["%s:%s" % (ip, server.server_port) for ip in ips]))
-else:
-    print('Pebble Slides started on port  %s (Please look up your IP address)'
-          % server.server_port)
+    ips = get_lan_ips()
+    if ips:
+        print('Pebble Slides started. Your address is:\n%s'
+            % '\n'.join(["%s:%s" % (ip, server.server_port) for ip in ips]))
+    else:
+        print('Pebble Slides started on port  %s (Please look up your IP address)'
+            % server.server_port)
 
-server.initialize_websockets_manager()
+    server.initialize_websockets_manager()
 
-try:
-    server.serve_forever()
-except KeyboardInterrupt:
-    server.server_close()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.server_close()
+
+if __name__ == "__main__":
+    main()
