@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import socket
 import netifaces
 from wsgiref.simple_server import make_server
 from ws4py.websocket import WebSocket
@@ -22,13 +21,9 @@ def isMac():
 
 def get_lan_ips():
     ips = set()
-    try:
-        ips.add(socket.gethostbyname(socket.gethostname()))
-    except socket.gaierror:
-        pass
 
-    for i in netifaces.interfaces():
-        iface = netifaces.ifaddresses(i).get(netifaces.AF_INET)
+    for interface in netifaces.interfaces():
+        iface = netifaces.ifaddresses(interface).get(netifaces.AF_INET)
         if iface:
             for j in iface:
                 ips.add(j['addr'])
